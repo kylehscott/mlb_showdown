@@ -1,10 +1,11 @@
 import random
 import csv
-#testing
-my_list = []
+
+set_year = "2001.csv"
+# x = current batter in lineup
 x = 81 - 2
 y = 51 - 2
-f = open('2001.csv')
+f = open(set_year)
 csv_f = csv.reader(f)
 
 # x = Player ID
@@ -71,13 +72,19 @@ for row in csv_f:
   TR_min.append(row[26])
   TR_max.append(row[27])
   HR_min.append(row[28])
-
   
+opp_lineup = []
+lineup = [57, 31, 200, 221, 392, 309, 456, 321, 333]
+
+x = 0
+
 roll = random.randint(1,20)
 
 print roll
-print "Batter:", no[x], set_name[x], player_name[x], team[x], pts[x], year[x], OB[x], spd[x], pos[x], bat[x]
+print player_name[lineup[x]]
+print "Batter:", no[lineup[x]], set_name[lineup[x]], player_name[lineup[x]], team[lineup[x]], pts[lineup[x]], year[lineup[x]], OB[lineup[x]], spd[lineup[x]], pos[lineup[x]], bat[lineup[x]]
 print "Pitcher:", no[y], set_name[y], player_name[y], team[y], pts[y], year[y], OB[y], spd[y], pos[y], bat[y]
+
 def roll_result(roll):
   if int(OB[x]) <= (int(OB[y]) + int(roll)):
     roll = random.randint(1,20)
@@ -128,5 +135,15 @@ def roll_result(roll):
       return "HR"
     else:
       return "Oops"
-    
+
+
+
+print roll_result(roll)
+
+
+if x < 8:
+  x += 1
+else:
+  x = 0
+print "Now batting: ", player_name[lineup[x]]
 print roll_result(roll)
