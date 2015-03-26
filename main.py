@@ -2,11 +2,13 @@ import random
 import csv
 
 set_year = "2001.csv"
-# x = current batter in lineup
-x = 81 - 2
-y = 51 - 2
 f = open(set_year)
 csv_f = csv.reader(f)
+
+#Current function commands
+#roll
+#sub
+#end
 
 # x = Player ID
 no = []
@@ -73,77 +75,144 @@ for row in csv_f:
   TR_max.append(row[27])
   HR_min.append(row[28])
   
-opp_lineup = []
-lineup = [57, 31, 200, 221, 392, 309, 456, 321, 333]
 
-x = 0
+home_team = []
+away_team = []
+
+base1 = 0
+base2 = 0
+base3 = 0
+
+inning = 0.5
+out = 0
+home_score = 0
+away_score = 0
+
+home_lineup = [99, 82,98, 85, 84, 100, 88, 93, 78]
+home_bench = [77, 79, 80, 81]
+home_pitcher = 92
+away_lineup = [546, 529, 525, 542, 534, 526, 528, 530, 532]
+away_bench = [531, 539, 540, 544, 545]
+away_pitcher = 543
+lineup = away_lineup
+bench = away_bench
+home_x = 0
+away_x = 0
+#batt = Current batter
+x = away_x
+y = home_pitcher
+
 
 roll = random.randint(1,20)
 
-print roll
-print player_name[lineup[x]]
-print "Batter:", no[lineup[x]], set_name[lineup[x]], player_name[lineup[x]], team[lineup[x]], pts[lineup[x]], year[lineup[x]], OB[lineup[x]], spd[lineup[x]], pos[lineup[x]], bat[lineup[x]]
-print "Pitcher:", no[y], set_name[y], player_name[y], team[y], pts[y], year[y], OB[y], spd[y], pos[y], bat[y]
+#print roll
+#print player_name[batt]
 
 def roll_result(roll):
-  if int(OB[x]) <= (int(OB[y]) + int(roll)):
+  global out
+  print "Outcome:", roll
+  if int(OB[lineup[x]]) >= (int(OB[y]) + int(roll)):
+    # batter roll
+    print "Advantage: Batter"
     roll = random.randint(1,20)
-    print roll
-    if int(PU_min[x]) <= roll <= int(PU_max[x]):
-      return "PU"
-    elif int(SO_min[x]) <= roll <= int(SO_max[x]):
-      return "SO"
-    elif int(GB_min[x]) <= roll <= int(GB_max[x]):
-      return "GB"
-    elif int(FB_min[x]) <= roll <= int(FB_max[x]):
-      return "FB"
-    elif int(BB_min[x]) <= roll <= int(BB_max[x]):
-      return "BB"
-    elif int(S_min[x]) <= roll <= int(S_max[x]):
-      return "1B"
-    elif int(SP_min[x]) <= roll <= int(SP_max[x]):
-      return "1B+"
-    elif int(DB_min[x]) <= roll <= int(DB_max[x]):
-      return "2B"
-    elif int(TR_min[x]) <= roll <= int(TR_max[x]):
-      return "3B"
-    elif int(HR_min[x]) <= roll:
-      return "HR"
+    print "Roll:", roll
+    if int(SO_min[lineup[x]]) <= roll <= int(SO_max[lineup[x]]):
+      out += 1
+      return "Outcome: SO"
+    elif int(GB_min[lineup[x]]) <= roll <= int(GB_max[lineup[x]]):
+      out += 1
+      return "Outcome: GB"
+    elif int(FB_min[lineup[x]]) <= roll <= int(FB_max[lineup[x]]):
+      out += 1
+      return "Outcome: FB"
+    elif int(BB_min[lineup[x]]) <= roll <= int(BB_max[lineup[x]]):
+      return "Outcome: BB"
+    elif int(S_min[lineup[x]]) <= roll <= int(S_max[lineup[x]]):
+      return "Outcome: 1B"
+    elif int(SP_min[lineup[x]]) <= roll <= int(SP_max[lineup[x]]):
+      return "Outcome: 1B+"
+    elif int(DB_min[lineup[x]]) <= roll <= int(DB_max[lineup[x]]):
+      return "Outcome: 2B"
+    elif int(TR_min[lineup[x]]) <= roll <= int(TR_max[lineup[x]]):
+      return "Outcome: 3B"
+    elif int(HR_min[lineup[x]]) <= roll:
+      return "Outcome: HR"
     else:
-      return "Oops"
+      return "Oops, this is not supposed to happen!"
   else:
+    # pitcher roll
+    print "Advantage: Pitcher"
     roll = random.randint(1,20)
+    print "Roll:", roll
     if int(PU_min[y]) <= roll <= int(PU_max[y]):
-      return "PU"
+      out += 1
+      return "Outcome: PU"
     elif int(SO_min[y]) <= roll <= int(SO_max[y]):
-      return "SO"
+      out += 1
+      return "Outcome: SO"
     elif int(GB_min[y]) <= roll <= int(GB_max[y]):
-      return "GB"
+      out += 1
+      return "Outcome: GB"
     elif int(FB_min[y]) <= roll <= int(FB_max[y]):
-      return "FB"
+      out += 1
+      return "Outcome: FB"
     elif int(BB_min[y]) <= roll <= int(BB_max[y]):
-      return "BB"
+      return "Outcome: BB"
     elif int(S_min[y]) <= roll <= int(S_max[y]):
-      return "1B"
-    elif int(SP_min[y]) <= roll <= int(SP_max[y]):
-      return "1B+"
+      return "Outcome: 1B"
     elif int(DB_min[y]) <= roll <= int(DB_max[y]):
-      return "2B"
-    elif int(TR_min[y]) <= roll <= int(TR_max[y]):
-      return "3B"
+      return "Outcome: 2B"
     elif int(HR_min[y]) <= roll:
-      return "HR"
+      return "Outcome: HR"
     else:
-      return "Oops"
+      return "Oops, this is not supposed to happen!"
+    
+while inning < 9:
+  if x == 9:
+    x = 0
+  if out == 3 and lineup == away_lineup:
+    lineup = home_lineup
+    away_x = x
+    x = home_x
+    y = away_pitcher
+    out = 0
+    inning += 0.5
+  elif out == 3 and lineup == home_lineup:
+    lineup = away_lineup
+    home_x = x
+    x = away_x
+    y = home_pitcher
+    out = 0
+    inning += 0.5
+  print "Batter:", player_name[lineup[x]], "OB:", OB[lineup[x]], "Pos:", pos[lineup[x]]
+  print "Pitcher:", player_name[y], "Ct:", OB[y]
+  print "Inning", int(inning + 0.5)
+  print "Outs", out
+  print "Bases: 1st:", base1 == 1, "2nd:", base2 == 1, "3rd:", base3 == 1
+  print " "
+  
 
+  comm = raw_input("What would you like to do? ")
 
-
-print roll_result(roll)
-
-
-if x < 8:
-  x += 1
-else:
-  x = 0
-print "Now batting: ", player_name[lineup[x]]
-print roll_result(roll)
+  if comm.lower() == "roll":
+    roll = random.randint(1,20)
+    print roll_result(roll)
+    print " "
+    x += 1
+  elif comm.lower() == "sub":
+    for i in lineup:
+      print player_name[i]  
+    sub = raw_input("Who would you like to replace? ")
+    for i in lineup:
+      if player_name[i] == sub.lower():
+        lineup.remove(i), bench.append(i)
+    for i in bench:
+      print player_name[i]
+    new_sub = raw_input("Who would you like to put in? ")
+    for i in bench:
+      if player_name[i] == new_sub.lower():
+        bench.remove(i), lineup.append(i)
+  elif comm.lower() == "end":
+    break
+  else:
+    print "Invalid command"
