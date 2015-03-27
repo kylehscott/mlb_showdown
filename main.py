@@ -77,34 +77,31 @@ for row in csv_f:
   HR_min.append(row[28])
   
 
-home_team = []
-away_team = []
+home_team = "Toronto"
+away_team = "Texas"
 
-base1 = 0
-base2 = 0
-base3 = 0
-
-inning = 0.5
+inning = 0
 out = 0
-home_score = 0
-away_score = 0
+home_score = []
+away_score = [0]
 
 bases = deque(["none", "none", "none"])
 
 home_lineup = [99, 82,98, 85, 84, 100, 88, 93, 78]
 home_bench = [77, 79, 80, 81]
 home_pitcher = 92
+home_bullpen = []
 away_lineup = [546, 529, 525, 542, 534, 526, 528, 530, 532]
 away_bench = [531, 539, 540, 544, 545]
 away_pitcher = 543
+away_bullpen = []
 lineup = away_lineup
 bench = away_bench
 home_x = 0
 away_x = 0
-#batt = Current batter
+score = away_score
 x = away_x
 y = home_pitcher
-
 
 roll = random.randint(1,20)
 
@@ -129,19 +126,27 @@ def roll_result(roll):
       out += 1
       return "Outcome: FB"
     elif int(BB_min[lineup[x]]) <= roll <= int(BB_max[lineup[x]]):
+      if bases[2] == "none":
+        bases.popleft()
+        bases.append((player_name[lineup[x]]))
+      else:
+        bases.append((player_name[lineup[x]]))
       return "Outcome: BB"
     elif int(S_min[lineup[x]]) <= roll <= int(S_max[lineup[x]]):
+      bases.append((player_name[lineup[x]]))
       return "Outcome: 1B"
     elif int(SP_min[lineup[x]]) <= roll <= int(SP_max[lineup[x]]):
+      bases.extend(("none", player_name[lineup[x]]))
       return "Outcome: 1B+"
     elif int(DB_min[lineup[x]]) <= roll <= int(DB_max[lineup[x]]):
+      bases.extend((player_name[lineup[x]], "none"))
       return "Outcome: 2B"
     elif int(TR_min[lineup[x]]) <= roll <= int(TR_max[lineup[x]]):
+      bases.extend((player_name[lineup[x]], "none", "none"))
       return "Outcome: 3B"
     elif int(HR_min[lineup[x]]) <= roll:
+      bases.extend((player_name[lineup[x]], "none", "none", "none"))
       return "Outcome: HR"
-    else:
-      return "Oops, this is not supposed to happen!"
   else:
     # pitcher roll
     print "Advantage: Pitcher"
@@ -160,38 +165,62 @@ def roll_result(roll):
       out += 1
       return "Outcome: FB"
     elif int(BB_min[y]) <= roll <= int(BB_max[y]):
+      bases.append((player_name[lineup[x]]))
       return "Outcome: BB"
     elif int(S_min[y]) <= roll <= int(S_max[y]):
+      if bases[2] == "none":
+        bases.popleft()
+        bases.append((player_name[lineup[x]]))
+      else:
+        bases.append((player_name[lineup[x]]))
       return "Outcome: 1B"
     elif int(DB_min[y]) <= roll <= int(DB_max[y]):
+      bases.extend((player_name[lineup[x]], "none"))
       return "Outcome: 2B"
     elif int(HR_min[y]) <= roll:
+      bases.extend((player_name[lineup[x]], "none", "none", "none"))
       return "Outcome: HR"
+
+def base_rot(x):
+  global score
+  for i in range(x):
+    if bases[0] == "none":
+      del bases[0]
     else:
-      return "Oops, this is not supposed to happen!"
+      score[int(inning)] += 1
+      del bases[0]
+
     
 while inning < 9:
   if x == 9:
     x = 0
   if out == 3 and lineup == away_lineup:
+    bases = deque(["none", "none", "none"])
     lineup = home_lineup
     away_x = x
+    home_score.append(0)
     x = home_x
     y = away_pitcher
+    score = home_score
     out = 0
     inning += 0.5
   elif out == 3 and lineup == home_lineup:
+    bases = deque(["none", "none", "none"])
     lineup = away_lineup
     home_x = x
+    away_score.append(0)
     x = away_x
     y = home_pitcher
+    score = away_score
     out = 0
     inning += 0.5
+  print away_team + ":", sum(away_score)
+  print home_team + ":", sum(home_score)
   print "Batter:", player_name[lineup[x]], "OB:", OB[lineup[x]], "Pos:", pos[lineup[x]]
   print "Pitcher:", player_name[y], "Ct:", OB[y]
-  print "Inning", int(inning + 0.5)
+  print "Inning", int(inning + 1)
   print "Outs", out
-  print "Bases: 1st:", base1 == 1, "2nd:", base2 == 1, "3rd:", base3 == 1
+  print "Bases: 1st:", bases[2], "2nd:", bases[1], "3rd:", bases[0]
   print " "
   
 
@@ -202,6 +231,8 @@ while inning < 9:
     print roll_result(roll)
     print " "
     x += 1
+    if len(bases) > 3:
+      base_rot(len(bases) - 3)
   elif comm.lower() == "sub":
     for i in lineup:
       print player_name[i]  
