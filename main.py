@@ -1,3 +1,4 @@
+from collections import deque
 import random
 import csv
 
@@ -87,6 +88,8 @@ inning = 0.5
 out = 0
 home_score = 0
 away_score = 0
+
+bases = deque(["none", "none", "none"])
 
 home_lineup = [99, 82,98, 85, 84, 100, 88, 93, 78]
 home_bench = [77, 79, 80, 81]
