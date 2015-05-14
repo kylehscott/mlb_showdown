@@ -17,16 +17,16 @@ end
 
 """
 To-do list:
-Fix walks moving runner on 2nd and/or 3rd
-Changed Var names
-Restructuring "roll_result"
 Pitchers box score
+Positional stuff
 Save box score to .txt file
 Import teams from .txt file
 Create more in-depth stats (2B's, 3B's, IBB, etc.)
-Add advanced gameplay (Steals, advancing on flyballs, etc.)
+Replace lineup[bat_pos]
 *MAYBE*
+Add advanced gameplay (Steals, advancing on flyballs, etc.)
 Bunting
+Change Var names
 *LATER*
 Building front end graphics
 Create pack system
@@ -99,15 +99,15 @@ for row in csv_f:
   
   
 # Variables for current game
-home_team = "Toronto"
 away_team = "Texas"
+home_team = "Toronto"
 
 inning = 0
 out = 0
-home_score = []
 away_score = [0]
+home_score = []
 
-bases = deque(["none", "none", "none"])
+bases = ["none", "none", "none"]
 base_term = ["3rd:", "2nd:", "1st:"]
 
 home_lineup = [99, 82,98, 85, 84, 100, 88, 93, 78]
@@ -121,24 +121,32 @@ away_bullpen = []
 lineup = away_lineup
 bench = away_bench
 bullpen = home_bullpen
-home_x = 0
-away_x = 0
+home_bat_pos = 0
+away_bat_pos = 0
 score = away_score
-x = away_x
+# Batter position in lineup
+bat_pos = away_bat_pos
 y = home_pitcher
 
 bat_box_home = []
 bat_box_away = []
+pit_box_home = []
+pit_box_away = []
 
 # Adds players to box score
 for i in home_lineup:
-  bat_box_home.append({"ID": i, "AB": 0, "R": 0, "H": 0, "RBI": 0, "BB": 0, "SO": 0, "PA": 0})
+  bat_box_home.append({"ID": i, "PA": 0, "AB": 0, "R": 0, "H": 0, "2B": 0, "3B": 0, "HR": 0, "RBI": 0, "BB": 0, "SO": 0})
 for i in away_lineup:
-  bat_box_away.append({"ID": i, "AB": 0, "R": 0, "H": 0, "RBI": 0, "BB": 0, "SO": 0, "PA": 0})
+  bat_box_away.append({"ID": i, "PA": 0, "AB": 0, "R": 0, "H": 0, "2B": 0, "3B": 0, "HR": 0, "RBI": 0, "BB": 0, "SO": 0})
+pit_box_home.append({"ID": i,})
   
-cur_box = bat_box_away
+bat_box = bat_box_away
 
-roll = random.randint(1,20)
+def box_find(ID):
+  global bat_box
+  for i in range(len(bat_box)):
+    if bat_box[i]["ID"] == ID:
+      return bat_box[i]
 
 # Possible outcomes for an At-Bat
 class Atbat(object):
@@ -147,175 +155,153 @@ class Atbat(object):
     global bases
     global out
     
-  def put_out(self, x):
+  def put_out(self, ID):
     global out
-    cur_box[x]["AB"] += 1
-    cur_box[x]["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["PA"] += 1
     out += 1
     print "Outcome: PU"
 
-  def strike_out(self, x):
+  def strike_out(self, ID):
     global out
-    cur_box[x]["AB"] += 1
-    cur_box[x]["SO"] += 1
-    cur_box[x]["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["SO"] += 1
+    box_find(ID)["PA"] += 1
     out += 1
     print "Outcome: SO"
     
-  def ground_ball(self, x):
+  def ground_ball(self, ID):
     global out
-    cur_box[x]["AB"] += 1
-    cur_box[x]["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["PA"] += 1
     out += 1
     print "Outcome: GB"
     
-  def fly_ball(self, x):
+  def fly_ball(self, ID):
     global out
-    cur_box[x]["AB"] += 1
-    cur_box[x]["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["PA"] += 1
     out += 1
     print "Outcome: FB"
     
-  def walk(self, x):
-    cur_box[x]["BB"] += 1
-    cur_box[x]["PA"] += 1    
+  def walk(self, ID):
+    box_find(ID)["BB"] += 1
+    box_find(ID)["PA"] += 1    
     if bases[2] == "none":
-      bases.popleft(2)
-      bases.append((lineup[x]))
+      bases.pop()
+      bases.append(ID)
+    elif bases [0] != "none" and bases[1] != "none" and bases[2] != "none":
+      bases.append(ID)
     elif bases[0] and bases[2] != "none":
-      bases.popleft(1)
-      bases.append((lineup[x]))
+      bases.remove("none")
+      bases.append(ID)
     elif bases[2] != "none":
-      bases.append((lineup[x]))
+      bases.append(ID)
     print "Outcome: BB"
 
-  def single(self, x):
-    cur_box[x]["AB"] += 1
-    cur_box[x]["H"] += 1
-    cur_box[x]["PA"] += 1
-    bases.append((lineup[x]))
+  def single(self, ID):
+    box_find(ID)["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["H"] += 1
+    bases.append(ID)
     print "Outcome: 1B"
     
-  def single_plus(self, x):
-    cur_box[x]["AB"] += 1
-    cur_box[x]["H"] += 1
-    cur_box[x]["PA"] += 1
-    bases.extend(("none", lineup[x]))
+  def single_plus(self, ID):
+    box_find(ID)["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["H"] += 1
+    bases.extend(["none", ID])
     print "Outcome: 1B+"
   
-  def double(self, x):
-    cur_box[x]["AB"] += 1
-    cur_box[x]["H"] += 1
-    cur_box[x]["PA"] += 1      
-    bases.extend((lineup[x], "none"))
+  def double(self, ID):
+    box_find(ID)["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["H"] += 1
+    box_find(ID)["2B"] += 1      
+    bases.extend([ID, "none"])
     print "Outcome: 2B"
 
-  def triple(self, x):
-    cur_box[x]["AB"] += 1
-    cur_box[x]["H"] += 1
-    cur_box[x]["PA"] += 1
-    bases.extend((lineup[x], "none", "none"))
+  def triple(self, ID):
+    box_find(ID)["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["H"] += 1
+    box_find(ID)["3B"] += 1
+    bases.extend([ID, "none", "none"])
     print "Outcome: 3B"
   
-  def home_run(self, x):
-    cur_box[x]["AB"] += 1
-    cur_box[x]["H"] += 1
-    cur_box[x]["PA"] += 1
-    bases.extend((lineup[x], "none", "none", "none"))
+  def home_run(self, ID):
+    box_find(ID)["PA"] += 1
+    box_find(ID)["AB"] += 1
+    box_find(ID)["H"] += 1
+    box_find(ID)["HR"] += 1
+    bases.extend([ID, "none", "none", "none"])
     print "Outcome: HR"
   
 ab = Atbat()
 
 # Defines players statline
 def player_statline(i):
-  print player_name[lineup[i]], "Stats:", "AB:", cur_box[i]["AB"], "R:", cur_box[i]["R"], "H:", cur_box[i]["H"], "RBI:", cur_box[i]["RBI"], "BB:", cur_box[i]["BB"], "SO:", cur_box[i]["SO"], "PA:", cur_box[i]["PA"]
+  print player_name[i], "Stats:", "AB:", box_find(i)["AB"], "R:", box_find(i)["R"], "H:", box_find(i)["H"], "RBI:", box_find(i)["RBI"], "BB:", box_find(i)["BB"], "SO:", box_find(i)["SO"], "PA:", box_find(i)["PA"]
 
-#Idea on how to improve
-"""Pass pitcher or batter through function. IF x == pitcher, PU is used, ELIF x == batter, 3B, etc. is used"""
 # Roll function to decide what happens during the at bat
-def roll_result(roll):
+def roll_result():
   global out
-  cur_bat = lineup[x]
+  cur_bat = lineup[bat_pos]
+  roll = random.randint(1,20)
   print "Outcome:", roll
   # Checks to see who gets advantage
-  if int(OB[lineup[x]]) >= (int(OB[y]) + int(roll)):
-    # batter roll
+  if int(OB[cur_bat]) >= (int(OB[y]) + int(roll)):
+    adv = cur_bat
     print "Advantage: Batter"
-    roll = random.randint(1,20)
-    print "Roll:", roll
-
-    if int(SO_min[cur_bat]) <= roll <= int(SO_max[cur_bat]):
-      ab.strike_out(x)
-
-    elif int(GB_min[cur_bat]) <= roll <= int(GB_max[cur_bat]):
-      ab.ground_ball(x)
-
-    elif int(FB_min[cur_bat]) <= roll <= int(FB_max[cur_bat]):
-      ab.fly_ball(x)
-
-    elif int(BB_min[cur_bat]) <= roll <= int(BB_max[cur_bat]):
-      ab.walk(x)
-
-    elif int(S_min[cur_bat]) <= roll <= int(S_max[cur_bat]):
-      ab.single(x)
-
-    elif int(SP_min[cur_bat]) <= roll <= int(SP_max[cur_bat]):
-      ab.single_plus(x)
-
-    elif int(DB_min[cur_bat]) <= roll <= int(DB_max[cur_bat]):
-      ab.double(x)
-
-    elif int(TR_min[cur_bat]) <= roll <= int(TR_max[cur_bat]):
-      ab.triple(x)
-
-    elif int(HR_min[cur_bat]) <= roll:
-      ab.home_run(x)
-    
   else:
-    # pitcher roll
+    adv = y
     print "Advantage: Pitcher"
-    roll = random.randint(1,20)
-    print "Roll:", roll
 
-    if int(PU_min[y]) <= roll <= int(PU_max[y]):
-      ab.put_out(x)
+  roll = random.randint(1,20)
+  print "Roll:", roll
+
+  if int(PU_min[adv]) <= roll <= int(PU_max[adv]):
+    ab.put_out(cur_bat)    
     
-    elif int(SO_min[y]) <= roll <= int(SO_max[y]):
-      ab.strike_out(x)
+  elif int(SO_min[adv]) <= roll <= int(SO_max[adv]):
+    ab.strike_out(cur_bat)
 
-    elif int(GB_min[y]) <= roll <= int(GB_max[y]):
-      ab.ground_ball(x)
+  elif int(GB_min[adv]) <= roll <= int(GB_max[adv]):
+    ab.ground_ball(cur_bat)
 
-    elif int(FB_min[y]) <= roll <= int(FB_max[y]):
-      ab.fly_ball(x)
+  elif int(FB_min[adv]) <= roll <= int(FB_max[adv]):
+    ab.fly_ball(cur_bat)
 
-    elif int(BB_min[y]) <= roll <= int(BB_max[y]):
-      ab.walk(x)
+  elif int(BB_min[adv]) <= roll <= int(BB_max[adv]):
+    ab.walk(cur_bat)
 
-    elif int(S_min[y]) <= roll <= int(S_max[y]):
-      ab.single(x)
+  elif int(S_min[adv]) <= roll <= int(S_max[adv]):
+    ab.single(cur_bat)
 
-    elif int(DB_min[y]) <= roll <= int(DB_max[y]):
-      ab.double(x)
+  elif int(SP_min[adv]) <= roll <= int(SP_max[adv]):
+    ab.single_plus(cur_bat)
 
-    elif int(TR_min[y]) <= roll <= int(TR_max[y]):
-      ab.triple(x)
+  elif int(DB_min[adv]) <= roll <= int(DB_max[adv]):
+    ab.double(cur_bat)
 
-    elif int(HR_min[y]) <= roll:
-      ab.home_run(x)
+  elif int(TR_min[adv]) <= roll <= int(TR_max[adv]):
+    ab.triple(cur_bat)
+
+  elif int(HR_min[adv]) <= roll:
+    ab.home_run(cur_bat)
 
 # Checks to see if a runner has scored, if so, adds RBI's and Run's to appropiate player
 def base_rot(run):
   global score
-  global x
+  global bat_pos
   for i in range(run):
     if bases[0] == "none":
       del bases[0]
     else:
-      for i in range(len(cur_box)):
-        if cur_box[i]["ID"] == bases[0]:
-          cur_box[i]["R"] += 1
-      cur_box[x - 1]["RBI"] += 1
+      for i in range(len(bat_box)):
+        if bat_box[i]["ID"] == bases[0]:
+          bat_box[i]["R"] += 1
+      bat_box[bat_pos - 1]["RBI"] += 1
       score[int(inning)] += 1
       del bases[0]
 
@@ -325,30 +311,30 @@ while inning < 9:
   if len(bases) > 3:
     base_rot(len(bases) - 3)
   # Rotates batting order  
-  if x == 9:
-    x = 0
+  if bat_pos == 9:
+    bat_pos = 0
   #Changes sides
   if out == 3 and lineup == away_lineup:
     bases = deque(["none", "none", "none"])
     lineup = home_lineup
-    away_x = x
-    bat_box_away = cur_box
+    away_bat_pos = bat_pos
+    bat_box_away = bat_box
     home_score.append(0)
-    x = home_x
+    bat_pos = home_bat_pos
     y = away_pitcher
-    cur_box = bat_box_home
+    bat_box = bat_box_home
     score = home_score
     out = 0
     inning += 0.5
   elif out == 3 and lineup == home_lineup:
     bases = deque(["none", "none", "none"])
     lineup = away_lineup
-    home_x = x
-    bat_box_home = cur_box
+    home_bat_pos = bat_pos
+    bat_box_home = bat_box
     away_score.append(0)
-    x = away_x
+    bat_pos = away_bat_pos
     y = home_pitcher
-    cur_box = bat_box_away
+    bat_box = bat_box_away
     score = away_score
     out = 0
     inning += 0.5
@@ -357,7 +343,7 @@ while inning < 9:
   # Prints info every At-Bat  
   print away_team + ":", sum(away_score)
   print home_team + ":", sum(home_score)
-  print "Batter:", player_name[lineup[x]], "OB:", OB[lineup[x]], "Pos:", pos[lineup[x]]
+  print "Batter:", player_name[lineup[bat_pos]], "OB:", OB[lineup[bat_pos]], "Pos:", pos[lineup[bat_pos]]
   print "Pitcher:", player_name[y], "Ct:", OB[y]
   print "Inning", int(inning + 1)
   print "Outs", out
@@ -372,7 +358,7 @@ while inning < 9:
 
   # Prints game stats for current player
   print " "
-  player_statline(x - 1)
+  player_statline(lineup[bat_pos - 1])
   print " "
 
   
@@ -382,13 +368,14 @@ while inning < 9:
   # Rolls dice for current AB
   if comm.lower() == "roll":
     roll = random.randint(1,20)
-    roll_result(roll)
+    roll_result()
     print " "
-    x += 1
+    bat_pos += 1
   
   # Intintial walk
   elif comm.lower() == "walk":
-    ab.walk(x)
+    ab.walk(lineup[bat_pos])
+    bat_pos += 1
       
   # Batter substitution    
   elif comm.lower() == "sub":
@@ -402,10 +389,10 @@ while inning < 9:
     for i in bench:
       print player_name[i]
     new_sub = raw_input("Who would you like to put in? ")
+    bat_box.insert(lineup_pos + 1, {"ID": i, "PA": 0, "AB": 0, "R": 0, "H": 0, "2B": 0, "3B": 0, "HR": 0, "RBI": 0, "BB": 0, "SO": 0})
     for i in bench:
       if player_name[i].lower() == new_sub.lower():
         bench.remove(i), lineup.insert(lineup_pos, i)
-        print bench
         
   # pitching substitute
   elif comm.lower() == "pitch sub":
@@ -422,12 +409,14 @@ while inning < 9:
   elif comm.lower() == "box":
     bxpl = raw_input("Input player name: ")
     if bxpl.lower() == "all":
-      for i in range(len(cur_box)):
-        player_statline(i)
+      for i in range(len(bat_box)):
+        player_statline(bat_box[i]["ID"])
         print " "
+    elif bxpl.lower() == "bat_box":
+      print bat_box
     else: 
-      for i in range(len(cur_box)):
-        if player_name[cur_box[i]["ID"]].lower() == bxpl.lower():
+      for i in range(len(bat_box)):
+        if player_name[bat_box[i]["ID"]].lower() == bxpl.lower():
           player_statline(i)
           print " "
     
